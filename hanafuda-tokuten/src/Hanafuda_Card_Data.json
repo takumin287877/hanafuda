@@ -1,0 +1,34 @@
+{
+    "lights": [
+        { "month": 1, "name": "松に鶴", "icon": "light-card" },
+        { "month": 3, "name": "桜に幔幕", "icon": "light-card" },
+        { "month": 8, "name": "芒に望月", "icon": "light-card" },
+        { "month": 12, "name": "桐に鳳凰", "icon": "light-card" },
+        { "month": 11, "name": "柳に小野道風", "icon": "light-card" }
+    ],
+    "seeds": [
+        { "month": 9, "name": "菊に盃", "icon": "sake-cup" },
+        { "month": 6, "name": "牡丹に蝶", "icon": "boar-deer-butterfly" },
+        { "month": 7, "name": "萩に猪", "icon": "boar-deer-butterfly" },
+        { "month": 10, "name": "紅葉に鹿", "icon": "boar-deer-butterfly" },
+        { "month": 1, "name": "松に鴬", "icon": null },
+        { "month": 2, "name": "梅に鴬", "icon": null },
+        { "month": 4, "name": "藤に不如帰", "icon": null },
+        { "month": 5, "name": "菖蒲に八つ橋", "icon": null },
+        { "month": 8, "name": "芒に雁", "icon": null },
+        { "month": 11, "name": "柳に燕", "icon": null }
+    ],
+    "ribbons": [
+        { "month": 1, "name": "松の赤短", "icon": "red-ribbon" },
+        { "month": 2, "name": "梅の赤短", "icon": "red-ribbon" },
+        { "month": 3, "name": "桜の赤短", "icon": "red-ribbon" },
+        { "month": 6, "name": "牡丹の青短", "icon": "blue-ribbon" },
+        { "month": 9, "name": "菊の青短", "icon": "blue-ribbon" },
+        { "month": 10, "name": "紅葉の青短", "icon": "blue-ribbon" },
+        { "month": 4, "name": "藤の短冊", "icon": null },
+        { "month": 5, "name": "菖蒲の短冊", "icon": null },
+        { "month": 7, "name": "萩の短冊", "icon": null },
+        { "month": 11, "name": "柳の短冊", "icon": null },
+        { "month": 12, "name": "桐の短冊", "icon": null }
+    ]
+}
