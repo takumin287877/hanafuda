@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import Hanafuda from './components/Hanafuda.vue'
+
 </script>
 
 <template>
-  <HelloWorld/>
+  <Hanafuda/>
 </template>
 
 <style scoped>
