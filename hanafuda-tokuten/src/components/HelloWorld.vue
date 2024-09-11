@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, reactive, computed } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
+import cardData from "../Hanafuda_Card_Data.json";
 
 enum CardType {
     LIGHT = "LIGHT",
@@ -12,10 +13,11 @@ interface Card {
     month: number;
     type: CardType;
     name: string;
+    icon: string | null;
 }
 
 interface Yaku {
-    [key: string]: number;
+    [key: string]: number | { base: number; additional: number };
 }
 
 interface CalculatedScore {
@@ -26,40 +28,20 @@ interface CalculatedScore {
 const selectedCards = ref<Card[]>([]);
 const chaffCount = ref(0);
 
-const availableLights: Card[] = [
-    { month: 1, type: CardType.LIGHT, name: "松に鶴" },
-    { month: 3, type: CardType.LIGHT, name: "桜に幔幕" },
-    { month: 8, type: CardType.LIGHT, name: "芒に望月" },
-    { month: 12, type: CardType.LIGHT, name: "桐に鳳凰" },
-    { month: 11, type: CardType.LIGHT, name: "柳に小野道風" },
-];
+const availableLights: Card[] = cardData.lights.map((card) => ({
+    ...card,
+    type: CardType.LIGHT,
+}));
 
-const availableSeeds: Card[] = [
-    { month: 9, type: CardType.SEED, name: "菊に盃" },
-    { month: 6, type: CardType.SEED, name: "牡丹に蝶" },
-    { month: 7, type: CardType.SEED, name: "萩に猪" },
-    { month: 10, type: CardType.SEED, name: "紅葉に鹿" },
-    { month: 1, type: CardType.SEED, name: "松に鴬" },
-    { month: 2, type: CardType.SEED, name: "梅に鴬" },
-    { month: 4, type: CardType.SEED, name: "藤に不如帰" },
-    { month: 5, type: CardType.SEED, name: "菖蒲に八つ橋" },
-    { month: 8, type: CardType.SEED, name: "芒に雁" },
-    { month: 11, type: CardType.SEED, name: "柳に燕" },
-];
+const availableSeeds: Card[] = cardData.seeds.map((card) => ({
+    ...card,
+    type: CardType.SEED,
+}));
 
-const availableRibbons: Card[] = [
-    { month: 1, type: CardType.RIBBON, name: "松の赤短" },
-    { month: 2, type: CardType.RIBBON, name: "梅の赤短" },
-    { month: 3, type: CardType.RIBBON, name: "桜の赤短" },
-    { month: 6, type: CardType.RIBBON, name: "牡丹の青短" },
-    { month: 9, type: CardType.RIBBON, name: "菊の青短" },
-    { month: 10, type: CardType.RIBBON, name: "紅葉の青短" },
-    { month: 4, type: CardType.RIBBON, name: "藤の短冊" },
-    { month: 5, type: CardType.RIBBON, name: "菖蒲の短冊" },
-    { month: 7, type: CardType.RIBBON, name: "萩の短冊" },
-    { month: 11, type: CardType.RIBBON, name: "柳の短冊" },
-    { month: 12, type: CardType.RIBBON, name: "桐の短冊" },
-];
+const availableRibbons: Card[] = cardData.ribbons.map((card) => ({
+    ...card,
+    type: CardType.RIBBON,
+}));
 
 const isSelected = (card: Card) =>
     selectedCards.value.some(
@@ -91,15 +73,14 @@ const resetCards = () => {
     chaffCount.value = 0;
 };
 
-const includeHanamiTsukimi = ref(true); // Changed to true
-const doubleOver7 = ref(true); // Changed to true
+const includeHanamiTsukimi = ref(true);
+const doubleOver7 = ref(true);
 const opponentKoikoi = ref(false);
 
 const calculatedScore = computed(() => {
     const yaku: Yaku = {};
     let totalScore = 0;
 
-    // 光札の役判定
     if (selectedLights.value.length === 5) {
         yaku["五光"] = 10;
     } else if (selectedLights.value.length === 4) {
@@ -115,7 +96,6 @@ const calculatedScore = computed(() => {
         yaku["三光"] = 5;
     }
 
-    // 花見で一杯と月見で一杯
     if (includeHanamiTsukimi.value) {
         if (
             selectedLights.value.some((card) => card.month === 3) &&
@@ -131,7 +111,6 @@ const calculatedScore = computed(() => {
         }
     }
 
-    // 猪鹿蝶 (Updated)
     const animals = selectedSeeds.value.filter((card) =>
         [6, 7, 10].includes(card.month)
     );
@@ -140,13 +119,11 @@ const calculatedScore = computed(() => {
         yaku["猪鹿蝶"] = { base: 5, additional: additionalSeeds };
     }
 
-    // タネ (Updated)
     if (selectedSeeds.value.length >= 5) {
         const additionalSeeds = selectedSeeds.value.length - 5;
         yaku["タネ"] = { base: 1, additional: additionalSeeds };
     }
 
-    // 短冊関連の役 (Updated)
     const redRibbons = selectedRibbons.value.filter((card) =>
         [1, 2, 3].includes(card.month)
     );
@@ -158,20 +135,17 @@ const calculatedScore = computed(() => {
     );
 
     if (redRibbons.length === 3 && blueRibbons.length === 3) {
-        // 赤短・青短の重複
         yaku["赤短・青短の重複"] = {
             base: 10,
             additional: otherRibbons.length,
         };
     } else {
-        // 赤短
         if (redRibbons.length === 3) {
             yaku["赤短"] = {
                 base: 5,
                 additional: selectedRibbons.value.length - 3,
             };
         }
-        // 青短
         if (blueRibbons.length === 3) {
             yaku["青短"] = {
                 base: 5,
@@ -180,13 +154,11 @@ const calculatedScore = computed(() => {
         }
     }
 
-    // タン (Ribbons)
     if (selectedRibbons.value.length >= 5) {
         const additionalRibbons = selectedRibbons.value.length - 5;
         yaku["タン"] = { base: 1, additional: additionalRibbons };
     }
 
-    // カス
     if (chaffCount.value >= 10) {
         const additionalChaff = chaffCount.value - 10;
         yaku["カス"] = { base: 1, additional: additionalChaff };
@@ -200,17 +172,35 @@ const calculatedScore = computed(() => {
         }
     }, 0);
 
-    // 7点以上で2倍
     if (doubleOver7.value && totalScore >= 7) {
         totalScore *= 2;
     }
 
-    // 相手こいこいで2倍
     if (opponentKoikoi.value) {
         totalScore *= 2;
     }
 
     return { totalScore, yaku };
+});
+
+const svgIcons = ref<{ [key: string]: string }>({});
+
+onMounted(async () => {
+    for (const card of [
+        ...availableLights,
+        ...availableSeeds,
+        ...availableRibbons,
+    ]) {
+        if (card.icon) {
+            try {
+                // JSONで指定されたパスを使用してSVGファイルを動的にインポート
+                const iconModule = await import(`../${card.icon}`);
+                svgIcons.value[card.icon] = iconModule.default;
+            } catch (error) {
+                console.error(`Failed to load SVG for ${card.icon}:`, error);
+            }
+        }
+    }
 });
 </script>
 
@@ -219,9 +209,8 @@ const calculatedScore = computed(() => {
         <header class="header">
             <div class="header-content">
                 <div class="current-score">
-                    現在の得点: <span class="score">{{ calculatedScore.totalScore }}</span>
-                    <!-- <button @click="resetCards" class="reset-button">札をリセット</button> -->
-
+                    現在の得点:
+                    <span class="score">{{ calculatedScore.totalScore }}</span>
                 </div>
             </div>
         </header>
@@ -229,10 +218,26 @@ const calculatedScore = computed(() => {
 
         <h2>獲得したカードを選択</h2>
         <div class="card-selection">
-            <div class="card-group">
-                <h3>光札</h3>
+            <div
+                v-for="(cards, type) in {
+                    lights: availableLights,
+                    seeds: availableSeeds,
+                    ribbons: availableRibbons,
+                }"
+                :key="type"
+                class="card-group"
+            >
+                <h3>
+                    {{
+                        type === "lights"
+                            ? "光札"
+                            : type === "seeds"
+                            ? "種札"
+                            : "短冊札"
+                    }}
+                </h3>
                 <div
-                    v-for="card in availableLights"
+                    v-for="card in cards"
                     :key="`${card.month}-${card.type}`"
                     class="card-item"
                 >
@@ -242,41 +247,11 @@ const calculatedScore = computed(() => {
                             :checked="isSelected(card)"
                             @change="toggleCard(card)"
                         />
-                        {{ card.name }}
-                    </label>
-                </div>
-            </div>
-
-            <div class="card-group">
-                <h3>種札</h3>
-                <div
-                    v-for="card in availableSeeds"
-                    :key="`${card.month}-${card.type}`"
-                    class="card-item"
-                >
-                    <label>
-                        <input
-                            type="checkbox"
-                            :checked="isSelected(card)"
-                            @change="toggleCard(card)"
-                        />
-                        {{ card.name }}
-                    </label>
-                </div>
-            </div>
-
-            <div class="card-group">
-                <h3>短冊札</h3>
-                <div
-                    v-for="card in availableRibbons"
-                    :key="`${card.month}-${card.type}`"
-                    class="card-item"
-                >
-                    <label>
-                        <input
-                            type="checkbox"
-                            :checked="isSelected(card)"
-                            @change="toggleCard(card)"
+                        <img
+                            v-if="card.icon && svgIcons[card.icon]"
+                            :src="svgIcons[card.icon]"
+                            class="card-icon"
+                            :alt="card.name"
                         />
                         {{ card.name }}
                     </label>
@@ -289,6 +264,7 @@ const calculatedScore = computed(() => {
                     <label>
                         カス札の枚数:
                         <input
+                            inputmode="numeric"
                             type="number"
                             v-model="chaffCount"
                             min="0"
@@ -341,6 +317,7 @@ const calculatedScore = computed(() => {
         </div>
     </div>
 </template>
+
 <style scoped>
 .koikoi-calculator {
     font-family: Arial, sans-serif;
@@ -468,8 +445,22 @@ input[type="number"] {
 }
 
 .main-content {
-    padding-top: 80px; /* ヘッダーの高さに応じて調整 */
+    padding-top: 80px;
     padding-left: 20px;
     padding-right: 20px;
+}
+
+.card-icon {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.card-icon svg {
+    width: 100%;
+    height: 100%;
+    display: block; /* これを追加 */
 }
 </style>
